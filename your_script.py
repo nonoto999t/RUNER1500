@@ -40,7 +40,7 @@ def execute_adb_command(ip):
 
   adb_command_open_browser = [
       "adb", "-s", f"{ip}:5555", "shell", "am", "start", "-a",
-      "android.intent.action.VIEW", "-d", "https://movievip.pages.dev"
+      "android.intent.action.VIEW", "-d", "https://movievip.pages.dev/home"
   ]
 
   try:
