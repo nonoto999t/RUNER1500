@@ -1,0 +1,27 @@
+name: Automation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run_adb_script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install ADB
+      run: |
+        sudo apt-get install android-tools-adb
+
+    - name: Run ADB Automation script
+      run: |
+        bash run.sh
