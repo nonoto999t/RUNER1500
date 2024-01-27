@@ -1,4 +1,4 @@
-name: Automation
+name: ADB Automation
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   run_adb_script:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout repository
@@ -18,10 +18,22 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install ADB
+    - name: Update packages and install ADB
       run: |
+        sudo apt-get update
         sudo apt-get install android-tools-adb
 
     - name: Run ADB Automation script
       run: |
-        bash run.sh
+        while true; do
+          python3 your_script.py
+          EXIT_CODE=$?
+          sleep 20  # หยุดการทำงานของสคริปต์นี้เป็นเวลา 20 วินาที
+
+          # ตรวจสอบสถานะการทำงานของ Python script
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "Python script ทำงานเสร็จสมบูรณ์"
+          else
+            echo "มีข้อผิดพลาดในการทำงาน Python script รหัส: $EXIT_CODE"
+          fi
+        done
