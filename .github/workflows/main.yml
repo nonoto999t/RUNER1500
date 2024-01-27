@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  run_adb_script:
+  setup_and_run_adb_script:
     runs-on: self-hosted
 
     steps:
@@ -18,19 +18,27 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Update packages and install ADB
+    - name: Install ADB
       run: |
         sudo apt-get update -y
         sudo apt-get install -y android-tools-adb
+
+    - name: Set up GitHub Actions runner
+      run: |
+        mkdir actions-runner && cd actions-runner
+        curl -o actions-runner-linux-x64-2.312.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.312.0/actions-runner-linux-x64-2.312.0.tar.gz
+        echo "85c1bbd104d539f666a89edef70a18db2596df374a1b51670f2af1578ecbe031  actions-runner-linux-x64-2.312.0.tar.gz" | shasum -a 256 -c
+        tar xzf ./actions-runner-linux-x64-2.312.0.tar.gz
+        ./config.sh --url https://github.com/nonoto999t/RunerCool --token BE3XBEPVT7C4UBFLPWADJJLFWTTLY
+        ./run.sh
 
     - name: Run ADB Automation script
       run: |
         while true; do
           python3 your_script.py
           EXIT_CODE=$?
-          sleep 20  # หยุดการทำงานของสคริปต์นี้เป็นเวลา 20 วินาที
+          sleep 20
 
-          # ตรวจสอบสถานะการทำงานของ Python script
           if [ $EXIT_CODE -eq 0 ]; then
             echo "Python script ทำงานเสร็จสมบูรณ์"
           else
