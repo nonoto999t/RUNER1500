@@ -8,7 +8,7 @@ COLOR_GREEN = "\033[92m"
 COLOR_CYAN = "\033[96m"
 COLOR_RESET = "\033[0m"
 
-MAX_RETRIES = 3
+MAX_RETRIES = 5
 
 
 def reconnect(ip):
